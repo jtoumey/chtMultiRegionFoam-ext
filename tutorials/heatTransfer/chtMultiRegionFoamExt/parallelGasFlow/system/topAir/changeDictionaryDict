@@ -41,7 +41,7 @@ U
 
 T
 {
-    internalField   uniform 320;
+    internalField   uniform 1800;
 
     boundaryField
     {
@@ -53,13 +53,13 @@ T
         minX
         {
             type            fixedValue;
-            value           uniform 320;
+            value           uniform 1800;
         }
         maxX
         {
             type            inletOutlet;
-            inletValue      uniform 320;
-            value           uniform 320;
+            inletValue      uniform 1800;
+            value           uniform 1800;
         }
 
         "topAir_to_.*"
@@ -67,7 +67,7 @@ T
             type            compressible::turbulentTemperatureCoupledBaffleMixed;
             Tnbr            T;
             kappaMethod     fluidThermo;
-            value           uniform 320;
+            value           uniform 1800;
         }
     }
 }

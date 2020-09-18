@@ -15,7 +15,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     chtMultiRegionFoam;
+application     chtMultiRegionFoamExt;
 
 startFrom       latestTime;
 
@@ -51,5 +51,27 @@ maxCo           0.6;
 maxDi           10.0;
 
 adjustTimeStep  yes;
+
+functions
+{
+	probes1
+	{
+		type				probes;
+		functionObjectLibs	("libsampling.so");
+		writeControl		timeStep;
+		region				solid;
+		probeLocations
+		(
+			(0  0     0)
+			(0 -0.008 0)
+			(0  0.008 0)
+		);
+		fields
+		(
+			T	
+		);
+
+	}
+}
 
 // ************************************************************************* //

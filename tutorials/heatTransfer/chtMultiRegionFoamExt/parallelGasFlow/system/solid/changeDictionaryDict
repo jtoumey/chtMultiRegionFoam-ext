@@ -37,7 +37,14 @@ T
             type            zeroGradient;
             value           uniform 300;
         }
-        "solid_to_.*"
+        solid_to_topAir
+        {
+            type            compressible::turbulentTemperatureCoupledBaffleMixed;
+            Tnbr            T;
+            kappaMethod     solidThermo;
+            value           uniform 1800;
+        }
+        solid_to_bottomAir
         {
             type            compressible::turbulentTemperatureCoupledBaffleMixed;
             Tnbr            T;
