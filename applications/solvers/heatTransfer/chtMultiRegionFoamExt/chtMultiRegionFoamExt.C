@@ -74,6 +74,8 @@ int main(int argc, char *argv[])
         #include "solidRegionDiffusionNo.H"
         #include "setMultiRegionDeltaT.H"
 
+        #include "setSolidDeltaT.H"
+        
         runTime++;
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
