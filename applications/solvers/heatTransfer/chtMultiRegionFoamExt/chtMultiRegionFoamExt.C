@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
     #include "solidRegionDiffusionNo.H"
     #include "setInitialMultiRegionDeltaT.H"
 
+	//  TODO: Move this to a general time-control init
 	scalar solidSolutionTime;
     #include "setSolidDeltaT.H"
 
