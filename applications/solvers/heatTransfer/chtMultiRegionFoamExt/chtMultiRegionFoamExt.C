@@ -114,28 +114,22 @@ int main(int argc, char *argv[])
                 #include "residualControlsFluid.H"
             }
 
-			Info << "LOOK: " << mag(solidSolutionTime - deltaTSolid) << endl;
 			if (mag(mag(runTime.value() - solidSolutionTime) - deltaTSolid) < runTime.deltaT().value())
 			{
-				Info << " Current time: " << runTime.value() << nl
-					 << " Current delta T solid: " << deltaTSolid << nl
-					 << " Current delta T global: " << runTime.deltaT().value() << nl 
-					 << " tisolid - deltaTSolid: " << solidSolutionTime - deltaTSolid << nl << endl;
-//			}
 
-            forAll(solidRegions, i)
-            {
-                Info<< "\nSolving for solid region "
-                    << solidRegions[i].name() << endl;
-                #include "setRegionSolidFields.H"
-                #include "readSolidMultiRegionPIMPLEControls.H"
-                #include "readSolidMultiRegionResidualControls.H"
-                #include "solveSolid.H"
-                #include "residualControlsSolid.H"
-            }
+	            forAll(solidRegions, i)
+		        {
+					Info<< "\nSolving for solid region "
+						<< solidRegions[i].name() << endl;
+					#include "setRegionSolidFields.H"
+					#include "readSolidMultiRegionPIMPLEControls.H"
+					#include "readSolidMultiRegionResidualControls.H"
+					#include "solveSolid.H"
+					#include "residualControlsSolid.H"
+				}
+
 				#include "setSolidDeltaT.H"
 			}
-
             #include "checkResidualControls.H"
         }
 
