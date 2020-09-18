@@ -64,6 +64,9 @@ int main(int argc, char *argv[])
     #include "solidRegionDiffusionNo.H"
     #include "setInitialMultiRegionDeltaT.H"
 
+	scalar solidSolutionTime;
+    #include "setSolidDeltaT.H"
+
     while (runTime.run())
     {
         #include "readTimeControls.H"
@@ -74,7 +77,6 @@ int main(int argc, char *argv[])
         #include "solidRegionDiffusionNo.H"
         #include "setMultiRegionDeltaT.H"
 
-        #include "setSolidDeltaT.H"
         
         runTime++;
 
@@ -112,6 +114,15 @@ int main(int argc, char *argv[])
                 #include "residualControlsFluid.H"
             }
 
+			Info << "LOOK: " << mag(solidSolutionTime - deltaTSolid) << endl;
+			if (mag(mag(runTime.value() - solidSolutionTime) - deltaTSolid) < runTime.deltaT().value())
+			{
+				Info << " Current time: " << runTime.value() << nl
+					 << " Current delta T solid: " << deltaTSolid << nl
+					 << " Current delta T global: " << runTime.deltaT().value() << nl 
+					 << " tisolid - deltaTSolid: " << solidSolutionTime - deltaTSolid << nl << endl;
+//			}
+
             forAll(solidRegions, i)
             {
                 Info<< "\nSolving for solid region "
@@ -122,6 +133,8 @@ int main(int argc, char *argv[])
                 #include "solveSolid.H"
                 #include "residualControlsSolid.H"
             }
+				#include "setSolidDeltaT.H"
+			}
 
             #include "checkResidualControls.H"
         }
