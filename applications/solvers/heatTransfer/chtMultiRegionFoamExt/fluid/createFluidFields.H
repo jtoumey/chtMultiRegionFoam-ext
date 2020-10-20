@@ -12,6 +12,8 @@ PtrList<volScalarField> p_rghFluid(fluidRegions.size());
 PtrList<radiation::radiationModel> radiation(fluidRegions.size());
 PtrList<volScalarField> KFluid(fluidRegions.size());
 PtrList<volScalarField> dpdtFluid(fluidRegions.size());
+// Laminar viscosity
+PtrList<volScalarField> muLaminarFluid(fluidRegions.size());
 
 List<scalar> initialMassFluid(fluidRegions.size());
 List<bool> frozenFlowFluid(fluidRegions.size(), false);
@@ -87,6 +89,24 @@ forAll(fluidRegions, i)
             ),
             linearInterpolate(rhoFluid[i]*UFluid[i])
                 & fluidRegions[i].Sf()
+        )
+    );
+
+    Info<< "    Adding to muLaminarFluid\n" << endl;
+    muLaminarFluid.set
+    (
+        i,
+        new volScalarField
+        (
+            IOobject
+            (
+                "muLaminar",
+                runTime.timeName(),
+                fluidRegions[i],
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            thermoFluid[i].mu()
         )
     );
 
