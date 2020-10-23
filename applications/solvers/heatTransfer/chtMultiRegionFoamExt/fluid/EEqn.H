@@ -35,4 +35,8 @@
 
     Info<< "Min/max T:" << min(thermo.T()).value() << ' '
         << max(thermo.T()).value() << endl;
+    Info<< "Min/max alphaEff:" << min(turb.alphaEff()).value() << ' '
+        << max(turb.alphaEff()).value() << endl;
+    Info<< "Min/max kappa:" << min(thermo.kappa()).value() << ' '
+        << max(thermo.kappa()).value() << endl;
 }
