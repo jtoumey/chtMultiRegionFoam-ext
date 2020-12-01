@@ -34,7 +34,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "rhoThermo.H"
 #include "psiThermo.H"
 #include "psiCombustionModel.H"
 #include "turbulentFluidThermoModel.H"
@@ -61,6 +60,9 @@ int main(int argc, char *argv[])
     #include "createTime.H"
     #include "createMeshes.H"
     #include "createFields.H"
+
+    pimpleControl pimple(fluidRegions[0]);
+    
     #include "initContinuityErrs.H"
     #include "createTimeControls.H"
     #include "readSolidTimeControls.H"
