@@ -131,53 +131,53 @@ forAll(fluidRegions, i)
         )
     );
 
-    Info<< "    Adding to hRefFluid\n" << endl;
-    hRefFluid.set
-    (
-        i,
-        new uniformDimensionedScalarField
-        (
-            IOobject
-            (
-                "hRef",
-                runTime.constant(),
-                fluidRegions[i],
-                IOobject::READ_IF_PRESENT,
-                IOobject::NO_WRITE
-            ),
-            dimensionedScalar("hRef", dimLength, 0)
-        )
-    );
+    // Info<< "    Adding to hRefFluid\n" << endl;
+    // hRefFluid.set
+    // (
+    //     i,
+    //     new uniformDimensionedScalarField
+    //     (
+    //         IOobject
+    //         (
+    //             "hRef",
+    //             runTime.constant(),
+    //             fluidRegions[i],
+    //             IOobject::READ_IF_PRESENT,
+    //             IOobject::NO_WRITE
+    //         ),
+    //         dimensionedScalar("hRef", dimLength, 0)
+    //     )
+    // );
 
-    dimensionedScalar ghRef
-    (
-        mag(gFluid[i].value()) > SMALL
-      ? gFluid[i]
-          & (cmptMag(gFluid[i].value())/mag(gFluid[i].value()))*hRefFluid[i]
-      : dimensionedScalar("ghRef", gFluid[i].dimensions()*dimLength, 0)
-    );
+    // dimensionedScalar ghRef
+    // (
+    //     mag(gFluid[i].value()) > SMALL
+    //   ? gFluid[i]
+    //       & (cmptMag(gFluid[i].value())/mag(gFluid[i].value()))*hRefFluid[i]
+    //   : dimensionedScalar("ghRef", gFluid[i].dimensions()*dimLength, 0)
+    // );
 
-    Info<< "    Adding to ghFluid\n" << endl;
-    ghFluid.set
-    (
-        i,
-        new volScalarField
-        (
-            "gh",
-            (gFluid[i] & fluidRegions[i].C()) - ghRef
-        )
-    );
+    // Info<< "    Adding to ghFluid\n" << endl;
+    // ghFluid.set
+    // (
+    //     i,
+    //     new volScalarField
+    //     (
+    //         "gh",
+    //         (gFluid[i] & fluidRegions[i].C()) - ghRef
+    //     )
+    // );
 
-    Info<< "    Adding to ghfFluid\n" << endl;
-    ghfFluid.set
-    (
-        i,
-        new surfaceScalarField
-        (
-            "ghf",
-            (gFluid[i] & fluidRegions[i].Cf()) - ghRef
-        )
-    );
+    // Info<< "    Adding to ghfFluid\n" << endl;
+    // ghfFluid.set
+    // (
+    //     i,
+    //     new surfaceScalarField
+    //     (
+    //         "ghf",
+    //         (gFluid[i] & fluidRegions[i].Cf()) - ghRef
+    //     )
+    // );
 
     Info<< "    Adding to turbulence\n" << endl;
     turbulence.set
@@ -188,36 +188,38 @@ forAll(fluidRegions, i)
             rhoFluid[i],
             UFluid[i],
             phiFluid[i],
-            reactionFluid[i]
+            reactionFluid[i].thermo()
         ).ptr()
     );
 
-    p_rghFluid.set
-    (
-        i,
-        new volScalarField
-        (
-            IOobject
-            (
-                "p_rgh",
-                runTime.timeName(),
-                fluidRegions[i],
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            fluidRegions[i]
-        )
-    );
+    reactionFluid[i].setTurbulence(turbulence[i]);
 
-    // Force p_rgh to be consistent with p
-    p_rghFluid[i] = reactionFluid[i].p() - rhoFluid[i]*ghFluid[i];
+    // p_rghFluid.set
+    // (
+    //     i,
+    //     new volScalarField
+    //     (
+    //         IOobject
+    //         (
+    //             "p_rgh",
+    //             runTime.timeName(),
+    //             fluidRegions[i],
+    //             IOobject::MUST_READ,
+    //             IOobject::AUTO_WRITE
+    //         ),
+    //         fluidRegions[i]
+    //     )
+    // );
 
-    fluidRegions[i].setFluxRequired(p_rghFluid[i].name());
+    // // Force p_rgh to be consistent with p
+    // p_rghFluid[i] = reactionFluid[i].p() - rhoFluid[i]*ghFluid[i];
+
+    // fluidRegions[i].setFluxRequired(p_rghFluid[i].name());
 
     radiation.set
     (
         i,
-        radiation::radiationModel::New(reactionFluid[i].T())
+        radiation::radiationModel::New(reactionFluid[i].thermo().T())
     );
 
     initialMassFluid[i] = fvc::domainIntegrate(rhoFluid[i]).value();
@@ -249,15 +251,15 @@ forAll(fluidRegions, i)
             dimensionedScalar
             (
                 "dpdt",
-                reactionFluid[i].p().dimensions()/dimTime,
+                reactionFluid[i].thermo().p().dimensions()/dimTime,
                 0
             )
         )
     );
 
     Info<< "    Adding to Qdot\n" << endl;
-   QdotFluid.set
-   (
+    QdotFluid.set
+    (
         i,
         new volScalarField
         (
@@ -297,11 +299,11 @@ forAll(fluidRegions, i)
         new fv::options(fluidRegions[i])
     );
 
-        fieldsFluid.set
-        (
-            i,
-            new multivariateSurfaceInterpolationScheme<scalar>::fieldTable 
-        );
+    fieldsFluid.set
+    (
+        i,
+        new multivariateSurfaceInterpolationScheme<scalar>::fieldTable 
+    );
 
     basicMultiComponentMixture& composition = reactionFluid[i].thermo().composition();  
         
