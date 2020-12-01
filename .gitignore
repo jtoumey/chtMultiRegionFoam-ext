@@ -73,3 +73,4 @@ doc/Doxygen/DTAGS
 
 # MacOs Files
 *.DS_Store
+.DS_Store
