@@ -3,17 +3,11 @@
 
     fvScalarMatrix EEqn
     (
-        fvm::ddt(rho, he) + fvm::div(phi, he)
-      + fvc::ddt(rho, K) + fvc::div(phi, K)
+        fvm::div(phi, he)
       + (
             he.name() == "e"
-          ? fvc::div
-            (
-                fvc::absolute(phi/fvc::interpolate(rho), U),
-                p,
-                "div(phiv,p)"
-            )
-          : -dpdt
+          ? fvc::div(phi, volScalarField("Ekp", 0.5*magSqr(U) + p/rho))
+          : fvc::div(phi, volScalarField("K", 0.5*magSqr(U)))
         )
       - fvm::laplacian(turb.alphaEff(), he)
      ==
@@ -27,7 +21,7 @@
 
     fvOptions.constrain(EEqn);
 
-    EEqn.solve(mesh.solver(he.select(finalIter)));
+    EEqn.solve();
 
     fvOptions.correct(he);
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,39 +21,29 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
+Global
+    continuityErrs
+
+Description
+    Calculates and prints the continuity errors.
+
 \*---------------------------------------------------------------------------*/
 
-#include "solidRegionDiffNo.H"
-#include "fvc.H"
-
-Foam::scalar Foam::solidRegionDiffNo
-(
-    const fvMesh& mesh,
-    const Time& runTime,
-    const volScalarField& Cprho,
-    const volScalarField& kappa
-)
 {
-    scalar DiNum = 0.0;
-    scalar meanDiNum = 0.0;
+    dimensionedScalar totalMass = fvc::domainIntegrate(rho);
 
-    //- Take care: can have fluid domains with 0 cells so do not test for
-    //  zero internal faces.
-    surfaceScalarField kapparhoCpbyDelta
-    (
-        mesh.surfaceInterpolation::deltaCoeffs()
-      * fvc::interpolate(kappa)
-      / fvc::interpolate(Cprho)
-    );
+    scalar sumLocalContErr =
+        (fvc::domainIntegrate(mag(rho - thermo.rho()))/totalMass).value();
 
-    DiNum = max(kapparhoCpbyDelta).value()*runTime.deltaT().value();
+    scalar globalContErr =
+        (fvc::domainIntegrate(rho - thermo.rho())/totalMass).value();
 
-    meanDiNum = (average(kapparhoCpbyDelta)).value()*runTime.deltaT().value();
+    cumulativeContErr += globalContErr;
 
-    Info<< "Region: " << mesh.name() << " Diffusion Number mean: " << meanDiNum
-        << " max: " << DiNum << endl;
-
-    return DiNum;
+    Info<< "time step continuity errors : sum local = " << sumLocalContErr
+        << ", global = " << globalContErr
+        << ", cumulative = " << cumulativeContErr
+        << endl;
 }
 
 // ************************************************************************* //

@@ -9,6 +9,9 @@ if (frozenFlow)
 }
 else
 {
+    reactionFluid[i].thermo().p().storePrevIter();
+    rho.storePrevIter();
+
     if (oCorr == 0)
     {
         #include "rhoEqn.H"
@@ -21,7 +24,14 @@ else
     // --- PISO loop
     for (int corr=0; corr<nCorr; corr++)
     {
-        #include "pEqn.H"
+          if (consistent)
+          {
+               #include "pcEqn.H"
+          }
+          else
+          {
+               #include "pEqn.H"
+          }
     }
 
     turb.correct();

@@ -22,7 +22,7 @@ if (finalIter)
 
         fvOptions.constrain(hEqn);
 
-        solvPerfh = hEqn.solve(mesh.solver(h.select(finalIter)));
+        hEqn.solve(mesh.solver(h.select(finalIter)));
 
         fvOptions.correct(h);
     }

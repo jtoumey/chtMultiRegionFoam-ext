@@ -1,4 +1,4 @@
-tmp<fv::convectionScheme<scalar>> mvConvection
+tmp<fv::convectionScheme<scalar> > mvConvection
 (
     fv::convectionScheme<scalar>::New
     (
@@ -9,25 +9,28 @@ tmp<fv::convectionScheme<scalar>> mvConvection
     )
 );
 
+
 {
     reaction.correct();
     Qdot = reaction.Qdot();
+    label inertIndex = -1;
     volScalarField Yt(0.0*Y[0]);
 
     forAll(Y, i)
     {
-        if (i != inertIndex && composition.active(i))
+    
+        if (Y[i].name() != inertSpecie)
         {
             volScalarField& Yi = Y[i];
 
             fvScalarMatrix YiEqn
             (
-                fvm::ddt(rho, Yi)
-              + mvConvection->fvmDiv(phi, Yi)
+                mvConvection->fvmDiv(phi, Yi)
               - fvm::laplacian(turb.muEff(), Yi)
              ==
                 reaction.R(Yi)
-              + fvOptions(rho, Yi)
+                + 
+                fvOptions(rho, Yi)
             );
 
             YiEqn.relax();
@@ -41,8 +44,13 @@ tmp<fv::convectionScheme<scalar>> mvConvection
             Yi.max(0.0);
             Yt += Yi;
         }
+        else
+        {
+            inertIndex = i;
+        }
     }
 
     Y[inertIndex] = scalar(1) - Yt;
     Y[inertIndex].max(0.0);
 }
+

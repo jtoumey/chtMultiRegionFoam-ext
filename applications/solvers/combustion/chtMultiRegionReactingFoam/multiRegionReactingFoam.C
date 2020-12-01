@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,14 +22,16 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    chtMultiRegionReactingFoam
+    multiRegionReactingFoam
 
 Description
-    Transient solver for buoyant, turbulent fluid flow and solid heat
-    conduction with conjugate heat transfer between solid and fluid regions.
+    Transient solver for laminar or turbulent fluid flow and solid heat
+    conduction with conjugate heat transfer between solid and fluid regions,
+    plus combustion with chemical reactions.
 
     It handles secondary fluid or solid circuits which can be coupled
     thermally with the main fluid region. i.e radiators, etc.
+
 
 \*---------------------------------------------------------------------------*/
 
@@ -45,8 +47,12 @@ Description
 #include "solidRegionDiffNo.H"
 #include "solidThermo.H"
 #include "radiationModel.H"
-#include "fvOptions.H"
 #include "coordinateSystem.H"
+#include "fvOptions.H"
+#include "fixedFluxPressureFvPatchScalarField.H"
+#include "multivariateScheme.H"
+#include "fvcSmooth.H"
+#include "localEulerDdtScheme.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,54 +64,57 @@ int main(int argc, char *argv[])
 
     #include "setRootCase.H"
     #include "createTime.H"
+
     #include "createMeshes.H"
+    #include "createControl.H"
     #include "createFields.H"
 
     pimpleControl pimple(fluidRegions[0]);
-    
+
     #include "initContinuityErrs.H"
     #include "createTimeControls.H"
     #include "readSolidTimeControls.H"
+    
     #include "compressibleMultiRegionCourantNo.H"
     #include "solidRegionDiffusionNo.H"
     #include "setInitialMultiRegionDeltaT.H"
 
-    Info<< "\nStarting time loop\n" << endl;
+    if (!LTS)
+    {
+        #include "compressibleMultiRegionCourantNo.H"
+        #include "setMultiRegionDeltaT.H"
+    }
 
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    Info<< "\nStarting time loop\n" << endl;
+    
     while (runTime.run())
     {
+//        #include "createTimeControls.H"
         #include "readTimeControls.H"
         #include "readSolidTimeControls.H"
         #include "readPIMPLEControls.H"
 
-        #include "compressibleMultiRegionCourantNo.H"
-        #include "solidRegionDiffusionNo.H"
-        #include "setMultiRegionDeltaT.H"
-
+        if (LTS)
+        {
+            #include "setRDeltaT.H"
+        }
+        else
+        {
+            #include "compressibleMultiRegionCourantNo.H"
+            #include "solidRegionDiffusionNo.H"
+            #include "setMultiRegionDeltaT.H"
+        }
+       
         runTime++;
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
-
-        if (nOuterCorr != 1)
-        {
-            forAll(fluidRegions, i)
-            {
-                #include "storeOldFluidFields.H"
-            }
-        }
-
-        bool allRegionsConverged = false;
-        bool finalIter = false;
-
-        // --- PIMPLE loop
+        
+                // --- PIMPLE loop
         for (int oCorr=0; oCorr<nOuterCorr; oCorr++)
         {
-            Info<< "Pimple iteration " << oCorr << "\n";
-
-            if (oCorr == nOuterCorr-1 || allRegionsConverged)
-            {
-                finalIter = true;
-            }
+            bool finalIter = oCorr == nOuterCorr-1;
 
             forAll(fluidRegions, i)
             {
@@ -113,9 +122,7 @@ int main(int argc, char *argv[])
                     << fluidRegions[i].name() << endl;
                 #include "setRegionFluidFields.H"
                 #include "readFluidMultiRegionPIMPLEControls.H"
-                #include "readFluidMultiRegionResidualControls.H"
                 #include "solveFluid.H"
-                #include "residualControlsFluid.H"
                 rho = thermo.rho();
             }
 
@@ -125,13 +132,11 @@ int main(int argc, char *argv[])
                     << solidRegions[i].name() << endl;
                 #include "setRegionSolidFields.H"
                 #include "readSolidMultiRegionPIMPLEControls.H"
-                #include "readSolidMultiRegionResidualControls.H"
                 #include "solveSolid.H"
-                #include "residualControlsSolid.H"
             }
 
-            #include "checkResidualControls.H"
         }
+        
 
         runTime.write();
 

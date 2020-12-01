@@ -1,13 +1,11 @@
-
 EXE_INC = \
-    -I./fluid \
-    -I./solid \
-    -I./porousFluid \
-    -I./porousSolid \
-    -I./include \
+    -Ifluid \
+    -Isolid \
+    -I../solid \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/sampling/lnInclude \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/cfdTools \
     -I$(LIB_SRC)/transportModels/compressible/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/specie/lnInclude \
@@ -24,18 +22,24 @@ EXE_INC = \
 
 
 EXE_LIBS = \
+    -lfiniteVolume \
     -lcompressibleTransportModels \
     -lfluidThermophysicalModels \
     -lsolidThermo \
     -lspecie \
+    -lchemistryModel \
+    -lODE \
+    -lmeshTools \
+    -lcombustionModels \
     -lturbulenceModels \
     -lcompressibleTurbulenceModels \
-    -lmeshTools \
-    -lfiniteVolume \
     -lradiationModels \
     -lfvOptions \
     -lregionModels \
-    -lsampling \
-    -lchemistryModel \
-    -lODE \
-    -lcombustionModels
+    -lthermophysicalProperties \
+    -lreactionThermophysicalModels \
+    -lsampling
+
+
+    
+   
