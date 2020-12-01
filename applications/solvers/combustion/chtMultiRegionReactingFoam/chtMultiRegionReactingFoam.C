@@ -37,10 +37,11 @@ Description
 #include "rhoThermo.H"
 #include "psiThermo.H"
 #include "psiCombustionModel.H"
-
 #include "turbulentFluidThermoModel.H"
 #include "fixedGradientFvPatchFields.H"
 #include "regionProperties.H"
+#include "pimpleControl.H"
+#include "pressureControl.H"
 #include "compressibleCourantNo.H"
 #include "solidRegionDiffNo.H"
 #include "solidThermo.H"
