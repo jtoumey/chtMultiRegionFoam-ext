@@ -33,6 +33,9 @@ thermo.correct();
 Info<< "Min/max T:" << min(thermo.T()).value() << ' '
     << max(thermo.T()).value() << endl;
 
+Info<< "Min/max alpha:" << min(thermo.alpha()).value() << ' '
+    << max(thermo.alpha()).value() << endl;
+
 if (finalIter)
 {
     mesh.data::remove("finalIteration");

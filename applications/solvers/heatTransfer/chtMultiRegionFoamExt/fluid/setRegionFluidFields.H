@@ -36,3 +36,16 @@
 
     bool& resReachedFluid = residualReachedFluid[i];
     bool& residualControlUsed = residualControlUsedFluid[i];
+
+    volScalarField lamvisc
+    (
+        IOobject
+        (
+            "mu",
+            runTime.timeName(),
+            mesh,
+			IOobject::NO_READ,
+			IOobject::AUTO_WRITE
+        ),
+        thermo.mu()
+    );

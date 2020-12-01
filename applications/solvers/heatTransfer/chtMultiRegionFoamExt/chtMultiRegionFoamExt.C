@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     #define NO_CONTROL
     #define CREATE_MESH createMeshesPostProcess.H
     #include "postProcess.H"
-
+ 
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createMeshes.H"
@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
     #include "solidRegionDiffusionNo.H"
     #include "setInitialMultiRegionDeltaT.H"
 
-	//  TODO: Move this to a general time-control init
-	scalar solidSolutionTime;
+    //  TODO: Move this to a general time-control init
+    scalar solidSolutionTime;
     #include "setSolidDeltaT.H"
 
     while (runTime.run())
@@ -115,8 +115,8 @@ int main(int argc, char *argv[])
                 #include "residualControlsFluid.H"
             }
 
-			if (mag(mag(runTime.value() - solidSolutionTime) - deltaTSolid) < runTime.deltaT().value())
-			{
+			//if (mag(mag(runTime.value() - solidSolutionTime) - deltaTSolid) < runTime.deltaT().value())
+			//{
 
 	            forAll(solidRegions, i)
 		        {
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 				}
 
 				#include "setSolidDeltaT.H"
-			}
+			//}
             #include "checkResidualControls.H"
         }
 
