@@ -18,20 +18,21 @@
 
     if (momentumPredictor)
     {
-        solvPerfU =
-            solve
-            (
-                UEqn
-              ==
-                fvc::reconstruct
-                (
-                    (
-                      - ghf*fvc::snGrad(rho)
-                      - fvc::snGrad(p_rgh)
-                    )*mesh.magSf()
-                ),
-                mesh.solver(U.select(finalIter))
-            );
+        solve(UEqn == -fvc::grad(p));
+        // solvPerfU =
+        //     solve
+        //     (
+        //         UEqn
+        //       ==
+        //         fvc::reconstruct
+        //         (
+        //             (
+        //               - ghf*fvc::snGrad(rho)
+        //               - fvc::snGrad(p_rgh)
+        //             )*mesh.magSf()
+        //         ),
+        //         mesh.solver(U.select(finalIter))
+        //     );
 
         fvOptions.correct(U);
         K = 0.5*magSqr(U);
