@@ -1,20 +1,26 @@
 // Initialise fluid field pointer lists
-PtrList<rhoThermo> thermoFluid(fluidRegions.size());
+PtrList<combustionModels::psiCombustionModel> reactionFluid(fluidRegions.size());
 PtrList<volScalarField> rhoFluid(fluidRegions.size());
 PtrList<volVectorField> UFluid(fluidRegions.size());
 PtrList<surfaceScalarField> phiFluid(fluidRegions.size());
 PtrList<uniformDimensionedVectorField> gFluid(fluidRegions.size());
 PtrList<uniformDimensionedScalarField> hRefFluid(fluidRegions.size());
 PtrList<volScalarField> ghFluid(fluidRegions.size());
+PtrList<volScalarField> CpFluid(fluidRegions.size());
 PtrList<surfaceScalarField> ghfFluid(fluidRegions.size());
 PtrList<compressible::turbulenceModel> turbulence(fluidRegions.size());
 PtrList<volScalarField> p_rghFluid(fluidRegions.size());
 PtrList<radiation::radiationModel> radiation(fluidRegions.size());
 PtrList<volScalarField> KFluid(fluidRegions.size());
 PtrList<volScalarField> dpdtFluid(fluidRegions.size());
+PtrList<volScalarField> QdotFluid(fluidRegions.size());
+
 
 List<scalar> initialMassFluid(fluidRegions.size());
 List<bool> frozenFlowFluid(fluidRegions.size(), false);
+PtrList<multivariateSurfaceInterpolationScheme<scalar>::fieldTable> fieldsFluid(fluidRegions.size());
+
+
 List<bool> residualReachedFluid(fluidRegions.size(), true);
 List<bool> residualControlUsedFluid(fluidRegions.size(), false);
 
@@ -27,12 +33,12 @@ forAll(fluidRegions, i)
     Info<< "*** Reading fluid mesh thermophysical properties for region "
         << fluidRegions[i].name() << nl << endl;
 
-    Info<< "    Adding to thermoFluid\n" << endl;
+    Info<< "    Adding to reactionFluid\n" << endl;
 
-    thermoFluid.set
+    reactionFluid.set
     (
         i,
-        rhoThermo::New(fluidRegions[i]).ptr()
+        autoPtr<combustionModels::psiCombustionModel>(combustionModels::psiCombustionModel::New(fluidRegions[i])).ptr()
     );
 
     Info<< "    Adding to rhoFluid\n" << endl;
@@ -49,7 +55,7 @@ forAll(fluidRegions, i)
                 IOobject::NO_READ,
                 IOobject::AUTO_WRITE
             ),
-            thermoFluid[i].rho()
+            reactionFluid[i].rho()
         )
     );
 
@@ -104,6 +110,24 @@ forAll(fluidRegions, i)
                 IOobject::MUST_READ,
                 IOobject::NO_WRITE
             )
+        )
+    );
+ 
+    Info << "    Adding to CpFluid\n" << endl;
+    CpFluid.set
+    (
+        i,
+        new volScalarField
+        (
+            IOobject
+            (
+                "Cp",
+                runTime.timeName(),
+                fluidRegions[i],
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+           reactionFluid[i].thermo().Cp()
         )
     );
 
@@ -164,7 +188,7 @@ forAll(fluidRegions, i)
             rhoFluid[i],
             UFluid[i],
             phiFluid[i],
-            thermoFluid[i]
+            reactionFluid[i]
         ).ptr()
     );
 
@@ -186,14 +210,14 @@ forAll(fluidRegions, i)
     );
 
     // Force p_rgh to be consistent with p
-    p_rghFluid[i] = thermoFluid[i].p() - rhoFluid[i]*ghFluid[i];
+    p_rghFluid[i] = reactionFluid[i].p() - rhoFluid[i]*ghFluid[i];
 
     fluidRegions[i].setFluxRequired(p_rghFluid[i].name());
 
     radiation.set
     (
         i,
-        radiation::radiationModel::New(thermoFluid[i].T())
+        radiation::radiationModel::New(reactionFluid[i].T())
     );
 
     initialMassFluid[i] = fvc::domainIntegrate(rhoFluid[i]).value();
@@ -225,7 +249,31 @@ forAll(fluidRegions, i)
             dimensionedScalar
             (
                 "dpdt",
-                thermoFluid[i].p().dimensions()/dimTime,
+                reactionFluid[i].p().dimensions()/dimTime,
+                0
+            )
+        )
+    );
+
+    Info<< "    Adding to Qdot\n" << endl;
+   QdotFluid.set
+   (
+        i,
+        new volScalarField
+        (
+            IOobject
+            (
+                "Qdot",
+                runTime.timeName(),
+                fluidRegions[i],
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE
+            ),
+                fluidRegions[i],
+                dimensionedScalar
+            (
+                "Qdot",
+                dimEnergy/dimVolume/dimTime,
                 0
             )
         )
@@ -248,6 +296,24 @@ forAll(fluidRegions, i)
         i,
         new fv::options(fluidRegions[i])
     );
+
+        fieldsFluid.set
+        (
+            i,
+            new multivariateSurfaceInterpolationScheme<scalar>::fieldTable 
+        );
+
+    basicMultiComponentMixture& composition = reactionFluid[i].thermo().composition();  
+        
+    
+    forAll(composition.Y(), j)
+    {
+            fieldsFluid[i].add(composition.Y()[j]);
+    }
+
+
+        
+    fieldsFluid[i].add(reactionFluid[i].thermo().he());
 
     turbulence[i].validate();
 }
